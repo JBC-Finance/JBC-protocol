@@ -11,22 +11,15 @@ contract LendPoolV1 {
     mapping(address => uint) public sharesOf;
     uint public totalShareBal;
 
-    address public operator;
-    address public token;
-    address public masterChef;
-    uint public pid;
+    address public immutable token;
+    address public immutable masterChef;
+    uint public immutable pid;
 
-    function setOperater(address _operator) external {
-        require(operator == address(0) || msg.sender == operator);
-        operator = _operator;
-    }
-
-    function set(
+    constructor(
         address _token,
         address _masterChef,
         uint _pid
-    ) external {
-        require(msg.sender == operator);
+    ) {
         token = _token;
         masterChef = _masterChef;
         pid = _pid;
