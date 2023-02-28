@@ -22,14 +22,12 @@ contract MasterChef is Ownable {
         uint256 accRewardPerShare; 
     }
     
-    address public reward;
-    
     PoolInfo[] public poolInfo;
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
     uint256 public totalAllocPoint = 0;
 
-    
     uint256 public curRewardRate;
+    uint256 public immutable MAX_DAILY_REWARD_RATE = 200000e18;
 
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
@@ -65,11 +63,9 @@ contract MasterChef is Ownable {
         totalAllocPoint = totalPoint;
     }
 
-    function setReward(address _addr) public onlyOwner {
-        reward = _addr;
-    }
 
     function setRewardRate(uint256 _rate) public onlyOwner {
+        require(_rate * 3600 * 24 < MAX_DAILY_REWARD_RATE, "invalid");
         massUpdatePools();
         curRewardRate = _rate;
     }
@@ -160,20 +156,6 @@ contract MasterChef is Ownable {
 
         pool.balance -= amount;
         emit Withdraw(_for, _pid, amount);
-    }
-
-    function claimReward(uint256 _pid) public {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
-        updatePool(_pid);
-        
-        uint256 pending = user.amount * pool.accRewardPerShare / 1e12 - user.rewardDebt;
-        pending += user.pending;
-        if (pending > 0) {
-            IReward(reward).getReward(msg.sender, pending);
-        }
-        user.pending = 0;
-        user.rewardDebt = user.amount * pool.accRewardPerShare / 1e12;
     }
     
 
